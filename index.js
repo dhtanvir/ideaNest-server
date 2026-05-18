@@ -10,7 +10,7 @@ const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 app.use(cors())
 app.use(express.json())
 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 8000
 const uri = process.env.MONGODB_URI;
 
 
@@ -30,11 +30,16 @@ async function run() {
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
 
-
-
+    const db= client.db('ideaNestDb')
+    const ideaCollection = db.collection('ideas')
 
 
     
+
+
+
+
+
 
 
 
