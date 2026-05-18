@@ -36,7 +36,10 @@ async function run() {
 
      /** API Routes  ***************/
 
-
+app.get('/ideas', async (req, res) => {
+  const result = await ideaCollection.find().toArray()
+  res.send(result)
+})
 
 
 
