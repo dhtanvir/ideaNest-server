@@ -3,7 +3,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 require('dotenv').config()
-const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 // Middleware
@@ -11,8 +11,8 @@ app.use(cors())
 app.use(express.json())
 
 const port = process.env.PORT || 8000
-const uri = process.env.MONGODB_URI;
-
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.wxgtlrb.mongodb.net/?appName=Cluster0`;
+ 
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -23,6 +23,34 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+const logger = (req, res, next) => {
+  console.log(`${req.method} | ${req.url}`);
+  next();
+};
+
+const verifyToken = async (req, res, next) => {
+  const { authorization } = req.headers;
+  //   console.log(req.headers, 'from verify token');
+  const token = authorization?.split(' ')[1];
+  //   console.log(token);
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorize' });
+  }
+
+  try {
+    const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`));
+    const { payload } = await jwtVerify(token, JWKS);
+    req.user = payload;
+
+    next();
+  } catch (error) {
+    console.error('Token validation failed:', error);
+    return res.status(401).json({ message: 'Unauthorize' });
+  }
+};
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -30,16 +58,27 @@ async function run() {
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
 
-    const db= client.db('ideaNestDb')
-    const ideaCollection = db.collection('ideas')
+    const db = client.db('ideaNestDb')
+    const ideaCollection = db.collection('ideases')
 
 
-     /** API Routes  ***************/
+    /** API Routes  ***************/
 
-app.get('/ideas', async (req, res) => {
-  const result = await ideaCollection.find().toArray()
-  res.send(result)
-})
+    app.get('/ideas', async (req, res) => {
+      const result = await ideaCollection.find().toArray()
+      res.send(result)
+    })
+    app.get('/ideas/featured', async (req, res) => {
+      const result = await ideaCollection.find().limit(4).toArray();
+      res.send(result);
+    })
+
+    app.get('/ideas/:ideasId',logger, verifyToken , async (req, res) => {
+      const { ideasId } = req.params
+      const query = { _id: new ObjectId(ideasId) }
+      const result = await ideaCollection.findOne(query)
+      res.send(result)
+    })
 
 
 
