@@ -168,6 +168,8 @@ async function run() {
 
     app.post("/comment", async (req, res) => {
       const newComments = req.body;
+      // console.log(newComments);
+      
       const result = await commentCollection.insertOne(newComments);
       res.send(result);
     });
