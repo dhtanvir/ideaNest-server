@@ -68,41 +68,19 @@ async function run() {
     /** API Routes  ***************/
 
     app.get('/ideas', async (req, res) => {
-
       const { search } = req.query;
 
-      let cursor;
-
+      let query = {};
 
       if (search) {
-        cursor = await ideaCollection.find({
-
-          ideaTitle: {
-            $regex: search,
-            $options: 'i',
-          },
-
-          // $or: [
-          //   {
-          //     ideaTitle: {
-          //       $regex: search,
-          //       $options: 'i',
-          //     },
-          //   },
-          //   // {
-          //   //   instructor: {
-          //   //     $regex: search,
-          //   //     $options: 'i',
-          //   //   },
-          //   // },
-          // ],
-        });
-        console.log(searchTerm, cursor, 'from searchTerm');
-      } else {
-        cursor = ideaCollection.find();
+        query.ideaTitle = {
+          $regex: search,
+          $options: "i",
+        };
       }
-      const result = await cursor.toArray();
-      res.json(result);
+
+      const result = await ideaCollection.find(query).toArray();
+      res.send(result);
     });
 
     // app.get("/ideas", async (req, res) => {
@@ -132,10 +110,13 @@ async function run() {
     // });
 
 
-    app.get('/ideas', async (req, res) => {
-      const result = await ideaCollection.find().toArray()
-      res.send(result)
-    })
+    // app.get('/ideas', async (req, res) => {
+    //   const result = await ideaCollection.find().toArray()
+    //   res.send(result)
+    // })
+
+
+
     app.get('/ideas/featured', async (req, res) => {
       const result = await ideaCollection.find().limit(4).toArray();
       res.send(result);
@@ -147,6 +128,14 @@ async function run() {
       const result = await ideaCollection.findOne(query)
       res.send(result)
     })
+
+    app.post('/ideas', async (req, res) => {
+      const ideasData = req.body;
+      const result = await ideaCollection.insertOne(ideasData)
+      res.json(result)
+
+    })
+
 
     /** comment API Routes */
 
@@ -169,11 +158,11 @@ async function run() {
     app.post("/comment", async (req, res) => {
       const newComments = req.body;
       // console.log(newComments);
-      
+
       const result = await commentCollection.insertOne(newComments);
       res.send(result);
     });
-    
+
     app.delete('/comment/:commentId', async (req, res) => {
       const { commentId } = req.params;
       const result = await commentCollection.deleteOne({ _id: new ObjectId(commentId) })
